@@ -1,18 +1,9 @@
-import db from "../db"
-import { usersTable } from "../db/schema"
-import { Request, Response } from "express"
+import db from "@/db";
+import { users } from "@/db/schema";
+import { Request, Response } from "express";
 
-export const makeUser = async (req: Request, res: Response): Promise<any> =>
-{
+export const makeUser = async (req: Request, res: Response): Promise<any> => {
+  console.log("hiiii");
 
-    const [inserted] = await db.insert(usersTable).values({
-        name: "Hardik",
-        email: "exampl@gmail.com",
-
-        age: 12
-    }).returning()
-
-    console.log("hii return object: ", inserted)
-
-    return res.status(200).send({ user: inserted })
-}
+  return res.status(200).send({ user: {} });
+};
