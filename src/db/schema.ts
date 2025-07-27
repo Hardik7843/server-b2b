@@ -15,9 +15,9 @@ export const users = pgTable("users", {
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
   firstName: text("firstName").notNull(),
-  lastName: text("lastName").notNull(),
-  phoneNumber: text("phoneNumber").notNull().unique(),
+  lastName: text("lastName"),
   email: varchar({ length: 255 }).notNull().unique(),
+  phoneNumber: text("phoneNumber"),
   image: text("image"),
   password: text("password"), // hashed password
   type: userTypeEnum("type").notNull().default("USER"),
@@ -29,4 +29,16 @@ export const users = pgTable("users", {
     .defaultNow()
     .$onUpdate(() => new Date())
     .notNull(),
+});
+
+export const sessions = pgTable("sessions", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  userId: text("userId")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  token: text("token").notNull().unique(),
+  expiresAt: timestamp("expiresAt", { mode: "date" }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
 });

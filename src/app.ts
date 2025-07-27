@@ -1,10 +1,15 @@
+// import dotenv from "dotenv";
+// dotenv.config({ path: ".env.local" });
+// console.log("loaded environment");
 import express from "express";
-import userRouter from "./routers/user.routes";
+import userRouter from "./routers/user.route";
+import authRouter from "./routers/auth.route";
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 8080;
 
 app.use(express.json());
+app.use("/auth", authRouter);
 app.use("/user", userRouter);
 
 app.listen(port, () => {
