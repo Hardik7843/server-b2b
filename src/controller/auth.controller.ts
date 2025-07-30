@@ -25,7 +25,7 @@ export const signup = async (req: Request, res: Response): Promise<any> => {
       });
     }
 
-    console.log("validation.data: ", validation.data);
+    // console.log("validation.data: ", validation.data);
     const { firstName, lastName, email, password, phoneNumber } =
       validation.data;
 
@@ -68,7 +68,14 @@ export const signup = async (req: Request, res: Response): Promise<any> => {
       expiresAt,
     });
 
-    res.status(201).json({
+    res.cookie("sessionToken", sessionToken, {
+      httpOnly: true,
+      secure: true, // HTTPS only (production)
+      sameSite: "strict", // CSRF protection
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+    });
+
+    return res.status(201).json({
       message: "User created successfully",
       sessionToken,
       user: {
@@ -124,6 +131,12 @@ export const signin = async (req: Request, res: Response): Promise<any> => {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7); // 7 days from now
 
+    // Delete existing session for the user
+    await db
+      .delete(sessions)
+      .where(eq(sessions.userId, user[0].id))
+      .returning();
+
     // Create session
     await db.insert(sessions).values({
       userId: user[0].id,
@@ -131,7 +144,14 @@ export const signin = async (req: Request, res: Response): Promise<any> => {
       expiresAt,
     });
 
-    res.status(200).json({
+    res.cookie("sessionToken", sessionToken, {
+      httpOnly: true,
+      secure: true, // HTTPS only (production)
+      sameSite: "strict", // CSRF protection
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+    });
+
+    return res.status(200).json({
       message: "Login successful",
       sessionToken,
       user: {
