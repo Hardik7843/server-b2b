@@ -69,8 +69,8 @@ export const signup = async (req: Request, res: Response): Promise<any> => {
     });
 
     res.cookie("sessionToken", sessionToken, {
-      httpOnly: true,
-      secure: true, // HTTPS only (production)
+      httpOnly: false,
+      secure: false, // HTTPS only (production)
       sameSite: "strict", // CSRF protection
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
     });
@@ -145,8 +145,8 @@ export const signin = async (req: Request, res: Response): Promise<any> => {
     });
 
     res.cookie("sessionToken", sessionToken, {
-      httpOnly: true,
-      secure: true, // HTTPS only (production)
+      httpOnly: false,
+      secure: false, // HTTPS only (production)
       sameSite: "strict", // CSRF protection
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
     });
@@ -194,6 +194,12 @@ export const logout = async (req: Request, res: Response): Promise<any> => {
       return res.status(404).json({ error: "Session not found" });
     }
 
+    res.clearCookie("sessionToken", {
+      httpOnly: false,
+      secure: false, // HTTPS only (production)
+      sameSite: "strict", // CSRF protection
+    });
+
     res.status(200).json({ message: "Logout successful" });
   } catch (error) {
     console.error("Logout error:", error);
@@ -211,9 +217,12 @@ export const requireAuth = async (
   next: NextFunction
 ): Promise<any> => {
   try {
-    const token = req.headers.authorization?.replace("Bearer ", "");
+    const token =
+      req.cookies.sessiontoken ||
+      req.headers.authorization?.replace("Bearer ", "");
 
     if (!token) {
+      // console.error("No token provided");
       return res.status(401).json({ error: "No token provided" });
     }
 
