@@ -218,7 +218,7 @@ export const requireAuth = async (
 ): Promise<any> => {
   try {
     const token =
-      req.cookies.sessiontoken ||
+      req.cookies.sessionToken ||
       req.headers.authorization?.replace("Bearer ", "");
 
     if (!token) {
