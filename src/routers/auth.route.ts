@@ -1,4 +1,5 @@
 import {
+  checkAuth,
   logout,
   requireAuth,
   signin,
@@ -8,6 +9,7 @@ import { Router } from "express";
 
 const authRouter = Router();
 
+authRouter.get("/check", checkAuth);
 authRouter.post("/signup", signup);
 
 authRouter.post("/login", signin);

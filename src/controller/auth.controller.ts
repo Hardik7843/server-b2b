@@ -1,12 +1,13 @@
 import db from "@/db";
 import { sessions, users } from "@/db/schema";
+import { getAuthenticatedUser } from "@/util/auth.util";
 import {
   logoutSchema,
   signinSchema,
   signupSchema,
 } from "@/validators/auth.validator";
 import bcrypt from "bcrypt";
-import { and, eq, gt } from "drizzle-orm";
+import { DrizzleError, eq } from "drizzle-orm";
 import { NextFunction, Request, Response } from "express";
 
 // Signup Controller
@@ -170,8 +171,11 @@ export const signin = async (req: Request, res: Response): Promise<any> => {
 
 export const logout = async (req: Request, res: Response): Promise<any> => {
   try {
-    const token = req.headers.authorization?.replace("Bearer ", "");
+    const token =
+      req.cookies.sessionToken ||
+      req.headers.authorization?.replace("Bearer ", "");
 
+    console.log("Logout token:", token);
     // Validate token
     const validation = logoutSchema.safeParse({ token });
     if (!validation.success) {
@@ -208,8 +212,26 @@ export const logout = async (req: Request, res: Response): Promise<any> => {
 };
 
 interface AuthenticatedRequest extends Request {
-  user?: any; // You can create a proper User type here
+  user?: any;
 }
+
+export const checkAuth = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const user = await getAuthenticatedUser(req);
+    const { id, ...userData } = user;
+
+    res.status(200).json({ user: userData });
+  } catch (error) {
+    let errorMessage = "Unauthorized";
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    if (error instanceof DrizzleError) {
+      errorMessage = "Database error: " + error.message;
+    }
+    res.status(401).json({ error: errorMessage || "Unauthorized" });
+  }
+};
 
 export const requireAuth = async (
   req: AuthenticatedRequest,
@@ -217,38 +239,8 @@ export const requireAuth = async (
   next: NextFunction
 ): Promise<any> => {
   try {
-    const token =
-      req.cookies.sessionToken ||
-      req.headers.authorization?.replace("Bearer ", "");
-
-    if (!token) {
-      // console.error("No token provided");
-      return res.status(401).json({ error: "No token provided" });
-    }
-
-    // Check if session exists and is valid
-    const session = await db
-      .select()
-      .from(sessions)
-      .where(and(eq(sessions.token, token), gt(sessions.expiresAt, new Date())))
-      .limit(1);
-
-    if (session.length === 0) {
-      return res.status(401).json({ error: "Invalid or expired session" });
-    }
-
-    // Get user data
-    const user = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, session[0].userId))
-      .limit(1);
-
-    if (user.length === 0) {
-      return res.status(401).json({ error: "User not found" });
-    }
-
-    req.user = user[0];
+    const user = await getAuthenticatedUser(req);
+    req.user = user;
     next();
   } catch (error) {
     console.error("Auth middleware error:", error);
