@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   boolean,
   integer,
@@ -61,4 +62,46 @@ export const product = pgTable("product", {
   deletedAt: timestamp("deletedAt"),
   active: boolean("active").default(false),
   stock: integer("stock").default(0),
+});
+
+// Not Used As of Now
+export const category = pgTable("category", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  image: text("image"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+  deletedAt: timestamp("deletedAt"),
+});
+
+// Not Used As of Now
+export const productCategoryPivot = pgTable("productCategoryPivot", {
+  id: serial("id").primaryKey(),
+  productId: integer("productId")
+    .notNull()
+    .references(() => product.id, { onDelete: "cascade" }),
+  categoryId: integer("categoryId")
+    .notNull()
+    .references(() => category.id, { onDelete: "cascade" }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(), // Not Used As of Now
+  updatedAt: timestamp("updatedAt")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
+
+// Not Used As of Now
+export const productReview = pgTable("productReview", {
+  id: serial("id").primaryKey(),
+  productId: integer("productId")
+    .notNull()
+    .references(() => product.id, { onDelete: "cascade" }),
+  userId: text("userId")
+    .notNull()
+    .references(() => users.id),
+  rating: integer("rating").notNull().default(0),
 });
