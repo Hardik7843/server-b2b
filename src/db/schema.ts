@@ -1,7 +1,9 @@
 import {
   boolean,
+  integer,
   pgEnum,
   pgTable,
+  real,
   serial,
   text,
   timestamp,
@@ -41,4 +43,22 @@ export const sessions = pgTable("sessions", {
   token: text("token").notNull().unique(),
   expiresAt: timestamp("expiresAt", { mode: "date" }).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export const product = pgTable("product", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  price: real("price"),
+  originalPrice: real("originalPrice"),
+  images: text("images").array().default([]),
+  tags: text("tags").array().default([]),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+  deletedAt: timestamp("deletedAt"),
+  active: boolean("active").default(false),
+  stock: integer("stock").default(0),
 });
