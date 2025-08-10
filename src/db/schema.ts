@@ -1,4 +1,3 @@
-import { sql } from "drizzle-orm";
 import {
   boolean,
   integer,
@@ -65,6 +64,18 @@ export const product = pgTable("product", {
 });
 
 // Not Used As of Now
+export const productFavourite = pgTable("product_favourite", {
+  id: serial("id").primaryKey(),
+  user_id: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  product_id: integer("product_id")
+    .notNull()
+    .references(() => product.id, { onDelete: "cascade" }),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Not Used As of Now
 export const category = pgTable("category", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -100,8 +111,78 @@ export const productReview = pgTable("productReview", {
   productId: integer("productId")
     .notNull()
     .references(() => product.id, { onDelete: "cascade" }),
+  userId: text("userId").references(() => users.id, { onDelete: "set null" }),
+  rating: integer("rating").notNull().default(0),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
+
+// export const shop = pgTable("shop", {
+//   id: text("id")
+//     .primaryKey()
+//     .$defaultFn(() => crypto.randomUUID()),
+
+//   name : text("name"),
+//   description : text("description")
+// })
+
+export const paymentAttempt = pgTable("payment_attempt", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  amount: real("amount").notNull(),
+  status: varchar("status", { length: 255 }).notNull().default("PENDING"), // PENDING, SUCCESS, FAILED
+  paymentGateway: varchar("payment_gateway", { length: 255 }).notNull(), // Example: "stripe", "razorpay"
+  // paymentGatewayTxnId: text("payment_gateway_txn_id"), // Gateway's txn reference
+  // failureReason: text("failure_reason"), // Null if successful
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
+
+// Defination of Order : Order is placed after successfull payment Order Can Have Three Status. UNPLACED, PAID,
+export const order = pgTable("order", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  status: varchar("status", { length: 255 }),
   userId: text("userId")
     .notNull()
-    .references(() => users.id),
-  rating: integer("rating").notNull().default(0),
+    .references(() => users.id, { onDelete: "set null" }),
+  amount: real("amount"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(), // Not Used As of Now
+  updatedAt: timestamp("updatedAt")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+
+  attemptId: text("attemptId").references(() => paymentAttempt.id),
+
+  // shopId: text("shopId")
+  // .notNull().references(() => shop.id, { onDelete : 'cascade'})
 });
+
+export const orderItems = pgTable("orderItems", {
+  id: serial("id").primaryKey(),
+  productId: integer("productId")
+    .notNull()
+    .references(() => product.id, { onDelete: "cascade" }),
+  quantity: integer("quantity").default(1),
+  price: real("price"),
+  orderId: text("orderId").references(() => order.id),
+  createdAt: timestamp("createdAt").defaultNow().notNull(), // Not Used As of Now
+  updatedAt: timestamp("updatedAt")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
+
+export const cartItems = pgTable("orderItems", {});
