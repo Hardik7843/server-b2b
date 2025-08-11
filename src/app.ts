@@ -5,6 +5,7 @@ import express from "express";
 import userRouter from "./routers/user.route";
 import authRouter from "./routers/auth.route";
 import cookieParser from "cookie-parser";
+import { requireAuth } from "./controller/auth.controller";
 
 const app = express();
 const port = process.env.PORT || 8080;
@@ -12,7 +13,7 @@ const port = process.env.PORT || 8080;
 app.use(cookieParser());
 app.use(express.json());
 app.use("/auth", authRouter);
-app.use("/user", userRouter);
+app.use("/user", requireAuth, userRouter);
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);

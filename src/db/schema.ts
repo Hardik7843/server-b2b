@@ -9,6 +9,7 @@ import {
   timestamp,
   varchar,
 } from "drizzle-orm/pg-core";
+import id from "zod/v4/locales/id.cjs";
 
 export const userTypeEnum = pgEnum("user_type", ["USER", "ADMIN"]);
 
@@ -113,11 +114,14 @@ export const productReview = pgTable("productReview", {
     .references(() => product.id, { onDelete: "cascade" }),
   userId: text("userId").references(() => users.id, { onDelete: "set null" }),
   rating: integer("rating").notNull().default(0),
+  content: text("content"),
+  images: text("images").array().default([]), // Array of image URLs
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt")
     .defaultNow()
     .$onUpdate(() => new Date())
     .notNull(),
+  deletedAt: timestamp("deletedAt"),
 });
 
 // export const shop = pgTable("shop", {
@@ -158,13 +162,12 @@ export const order = pgTable("order", {
     .notNull()
     .references(() => users.id, { onDelete: "set null" }),
   amount: real("amount"),
+  attemptId: text("attemptId").references(() => paymentAttempt.id),
   createdAt: timestamp("createdAt").defaultNow().notNull(), // Not Used As of Now
   updatedAt: timestamp("updatedAt")
     .defaultNow()
     .$onUpdate(() => new Date())
     .notNull(),
-
-  attemptId: text("attemptId").references(() => paymentAttempt.id),
 
   // shopId: text("shopId")
   // .notNull().references(() => shop.id, { onDelete : 'cascade'})
@@ -178,11 +181,24 @@ export const orderItems = pgTable("orderItems", {
   quantity: integer("quantity").default(1),
   price: real("price"),
   orderId: text("orderId").references(() => order.id),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt") // Not Used As of Now
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
+
+export const cartItems = pgTable("orderItems", {
+  id: serial("id").primaryKey(),
+  productId: integer("productId")
+    .notNull()
+    .references(() => product.id, { onDelete: "cascade" }),
+  quantity: integer("quantity").default(1),
+  price: real("price"),
+  userId: text("userId").references(() => users.id, { onDelete: "cascade" }),
   createdAt: timestamp("createdAt").defaultNow().notNull(), // Not Used As of Now
   updatedAt: timestamp("updatedAt")
     .defaultNow()
     .$onUpdate(() => new Date())
     .notNull(),
 });
-
-export const cartItems = pgTable("orderItems", {});

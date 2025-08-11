@@ -211,10 +211,6 @@ export const logout = async (req: Request, res: Response): Promise<any> => {
   }
 };
 
-interface AuthenticatedRequest extends Request {
-  user?: any;
-}
-
 export const checkAuth = async (req: Request, res: Response): Promise<any> => {
   try {
     const user = await getAuthenticatedUser(req);
@@ -232,6 +228,10 @@ export const checkAuth = async (req: Request, res: Response): Promise<any> => {
     res.status(401).json({ error: errorMessage || "Unauthorized" });
   }
 };
+
+export interface AuthenticatedRequest extends Request {
+  user?: Awaited<ReturnType<typeof getAuthenticatedUser>>;
+}
 
 export const requireAuth = async (
   req: AuthenticatedRequest,

@@ -6,7 +6,8 @@
     "build": "tsc",
     "start": "node dist/app.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "tsx watch --clear-screen=false src/app.ts"
+    "dev": "tsx watch --clear-screen=false src/app.ts",
+    "db:seed": "tsx src/db/seeder.ts"
   },
   "author": "",
   "license": "ISC",
@@ -19,6 +20,7 @@
     "cookie-parser": "^1.4.7",
     "dotenv": "^16.5.0",
     "drizzle-orm": "^0.43.1",
+    "drizzle-seed": "^0.3.1",
     "express": "^5.1.0",
     "nodemon": "^3.1.10",
     "pg": "^8.15.6",
