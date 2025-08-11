@@ -9,9 +9,8 @@ import {
   timestamp,
   varchar,
 } from "drizzle-orm/pg-core";
-import id from "zod/v4/locales/id.cjs";
 
-export const userTypeEnum = pgEnum("user_type", ["USER", "ADMIN"]);
+export type userTypeEnum = "USER" | "ADMIN";
 
 export const users = pgTable("users", {
   id: text("id")
@@ -23,7 +22,7 @@ export const users = pgTable("users", {
   phoneNumber: text("phoneNumber"),
   image: text("image"),
   password: text("password"), // hashed password
-  type: userTypeEnum("type").notNull().default("USER"),
+  type: varchar("type", { length: 255 }).$type<userTypeEnum>().default("USER"),
   acceptTerms: boolean().default(true),
   acceptPromos: boolean().default(true),
   emailVerified: timestamp("emailVerified", { mode: "date" }),
