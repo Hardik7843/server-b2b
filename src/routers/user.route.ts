@@ -1,7 +1,4 @@
-import {
-  AuthenticatedRequest,
-  requireAuth,
-} from "@/controller/auth.controller";
+import { AuthenticatedRequest } from "@/controller/auth.controller";
 import { makeUser } from "@/controller/user.controller";
 import { Request, Response, Router } from "express";
 // import { makeUser } from "../controller/user.controller";
@@ -12,11 +9,18 @@ export const userRouter = Router();
 // userRouter.delete('/truncate', UserTruncate)
 // userRouter.post('/update', updateUser)
 
-userRouter.get("/check", (req: AuthenticatedRequest, res: Response) => {
-  console.log("hiii", req.user);
+userRouter.get(
+  "/check",
+  async (req: AuthenticatedRequest, res: Response): Promise<any> => {
+    // console.log("hiii", req.user);
 
-  res.status(200).send({ message: "hiiiiiiii" });
-});
+    return res.status(200).json({
+      success: true,
+      data: { user: req.user },
+      message: "User Detail Fetched",
+    });
+  }
+);
 
 // userRouter.post("/signup", signup);
 // userRouter.post("/login", login);
