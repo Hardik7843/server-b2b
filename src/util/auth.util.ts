@@ -60,7 +60,7 @@ export async function getAuthenticatedAdmin(req: Request) {
     )
     .limit(1);
 
-  if (user.length === 0) throw new Error("Admin not found or not authorized");
+  if (user.length === 0) throw new Error("Unauthorised: Admin not found");
 
   return user[0];
 }

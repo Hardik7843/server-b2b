@@ -30,6 +30,6 @@ userRouter.get(
 
 // userRouter.put("/updateProfile", updateProfile);
 // userRouter.get("/check", checkAuth);
-userRouter.post("/createOne", makeUser);
+// userRouter.post("/createOne", makeUser);
 
 export default userRouter;

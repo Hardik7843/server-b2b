@@ -1,15 +1,16 @@
 import db from "@/db";
 import { sessions, users } from "@/db/schema";
 import { getAuthenticatedAdmin, getAuthenticatedUser } from "@/util/auth.util";
+import { CustomError } from "@/util/error.util";
 import {
   logoutSchema,
   signinSchema,
   signupSchema,
 } from "@/validators/auth.validator";
 import bcrypt from "bcrypt";
-import { DrizzleError, eq } from "drizzle-orm";
+import { DrizzleError, eq, ne } from "drizzle-orm";
 import { NextFunction, Request, Response } from "express";
-import { success } from "zod";
+import { cursorTo } from "readline";
 
 // Signup Controller
 
@@ -18,15 +19,23 @@ export const signup = async (req: Request, res: Response): Promise<any> => {
     // Validate request body
     const validation = signupSchema.safeParse(req.body);
     if (!validation.success) {
-      return res.status(400).json({
-        success: false,
+      throw new CustomError({
         message: "Invalid Signup data",
-        error: "Validation failed",
-        details: validation.error.issues.map((issue) => ({
+        error: validation.error.issues.map((issue) => ({
           field: issue.path[0],
           message: issue.message,
         })),
+        statusCode: 400,
       });
+      // return res.status(400).json({
+      // success: false,
+      // message: "Invalid Signup data",
+      // error: "Validation failed",
+      // details: validation.error.issues.map((issue) => ({
+      //   field: issue.path[0],
+      //   message: issue.message,
+      // })),
+      // });
     }
 
     // console.log("validation.data: ", validation.data);
@@ -41,11 +50,16 @@ export const signup = async (req: Request, res: Response): Promise<any> => {
       .limit(1);
 
     if (existingUser.length > 0) {
-      return res.status(400).json({
-        success: false,
+      throw new CustomError({
         message: "Email Matched with existing user",
-        error: "User already exists",
+        statusCode: 400,
+        error: "User Already Exists",
       });
+      // return res.status(400).json({
+      //   success: false,
+      //   message: "Email Matched with existing user",
+      //   error: "User already exists",
+      // });
     }
 
     // Hash password
@@ -94,12 +108,13 @@ export const signup = async (req: Request, res: Response): Promise<any> => {
       },
     });
   } catch (error) {
-    console.error("Signup error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Server is unable to respond",
-      error: "Internal server error",
-    });
+    // console.error("Signup error:", error);
+    throw error;
+    // return res.status(500).json({
+    //   success: false,
+    //   message: "Server is unable to respond",
+    //   error: "Internal server error",
+    // });
   }
 };
 
@@ -108,15 +123,23 @@ export const signin = async (req: Request, res: Response): Promise<any> => {
     // Validate request body
     const validation = signinSchema.safeParse(req.body);
     if (!validation.success) {
-      return res.status(400).json({
-        success: false,
+      throw new CustomError({
         message: "Invalid Signin data",
-        error: "Validation failed",
-        details: validation.error.issues.map((issue) => ({
+        statusCode: 400,
+        error: validation.error.issues.map((issue) => ({
           field: issue.path[0],
           message: issue.message,
         })),
       });
+      // return res.status(400).json({
+      //   success: false,
+      //   message: "Invalid Signin data",
+      //   error: "Validation failed",
+      //   details: validation.error.issues.map((issue) => ({
+      //     field: issue.path[0],
+      //     message: issue.message,
+      //   })),
+      // });
     }
 
     const { email, password } = validation.data;
@@ -129,14 +152,32 @@ export const signin = async (req: Request, res: Response): Promise<any> => {
       .limit(1);
 
     if (user.length === 0 || !user[0].password) {
-      return res.status(401).json({ error: "Invalid credentials" });
+      throw new CustomError({
+        statusCode: 401,
+        message: "Wrong Email",
+        error: "Invalid credentials",
+      });
+      // return res.status(401).json({
+      //   success: false,
+      //   message: "Wrong Email",
+      //   error: "Invalid credentials",
+      // });
     }
 
     // Verify password
 
     const isValidPassword = await bcrypt.compare(password, user[0].password);
     if (!isValidPassword) {
-      return res.status(401).json({ error: "Invalid credentials" });
+      throw new CustomError({
+        statusCode: 401,
+        message: "Wrong Password",
+        error: "Invalid credentials",
+      });
+      // return res.status(401).json({
+      //   success: false,
+      //   message: "Wrong Password",
+      //   error: "Invalid credentials",
+      // });
     }
 
     // Generate session token
@@ -164,20 +205,17 @@ export const signin = async (req: Request, res: Response): Promise<any> => {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
     });
 
+    const { password: _password, ...finalUser } = user[0];
+
     return res.status(200).json({
+      success: true,
       message: "Login successful",
       sessionToken,
-      user: {
-        id: user[0].id,
-        firstName: user[0].firstName,
-        lastName: user[0].lastName,
-        email: user[0].email,
-        phoneNumber: user[0].phoneNumber,
-      },
+      data: { user: finalUser },
     });
   } catch (error) {
-    console.error("Signin error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    // console.error("Signin error:", error);
+    throw error;
   }
 };
 
@@ -191,13 +229,22 @@ export const logout = async (req: Request, res: Response): Promise<any> => {
     // Validate token
     const validation = logoutSchema.safeParse({ token });
     if (!validation.success) {
-      return res.status(400).json({
-        error: "Invalid token format",
-        details: validation.error.issues.map((issue) => ({
+      throw new CustomError({
+        message: "Invalid Session",
+        statusCode: 400,
+        error: validation.error.issues.map((issue) => ({
           field: issue.path[0],
           message: issue.message,
         })),
       });
+      // return res.status(400).json({
+      //   message: "Invalid Session",
+      //   error: "Invalid token format",
+      //   details: validation.error.issues.map((issue) => ({
+      //     field: issue.path[0],
+      //     message: issue.message,
+      //   })),
+      // });
     }
 
     // Delete session from database
@@ -207,7 +254,15 @@ export const logout = async (req: Request, res: Response): Promise<any> => {
       .returning();
 
     if (deletedSessions.length === 0) {
-      return res.status(404).json({ error: "Session not found" });
+      throw new CustomError({
+        statusCode: 404,
+        message: "Session not found",
+        error: "Session not found",
+      });
+      // return res.status(404).json({
+      //   message: "Session not found",
+      //   error: "Session not found",
+      // });
     }
 
     res.clearCookie("sessionToken", {
@@ -216,10 +271,10 @@ export const logout = async (req: Request, res: Response): Promise<any> => {
       sameSite: "strict", // CSRF protection
     });
 
-    res.status(200).json({ message: "Logout successful" });
+    res.status(200).json({ success: true, message: "Logout successful" });
   } catch (error) {
     console.error("Logout error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    throw error;
   }
 };
 
@@ -228,7 +283,11 @@ export const checkAuth = async (req: Request, res: Response): Promise<any> => {
     const user = await getAuthenticatedUser(req);
     const { id, ...userData } = user;
 
-    res.status(200).json({ user: userData });
+    res.status(200).json({
+      success: true,
+      message: "User Details Found",
+      data: { user: userData },
+    });
   } catch (error) {
     let errorMessage = "Unauthorized";
     if (error instanceof Error) {
@@ -237,7 +296,16 @@ export const checkAuth = async (req: Request, res: Response): Promise<any> => {
     if (error instanceof DrizzleError) {
       errorMessage = "Database error: " + error.message;
     }
-    res.status(401).json({ error: errorMessage || "Unauthorized" });
+    throw new CustomError({
+      statusCode: 401,
+      message: "Please Signup/Signin first",
+      error: errorMessage || "Unauthorized",
+    });
+    // res.status(401).json({
+    //   success: false,
+    //   message: "",
+    //   error: errorMessage || "Unauthorized",
+    // });
   }
 };
 
@@ -255,12 +323,23 @@ export const requireAuth = async (
     req.user = user;
     next();
   } catch (error) {
-    // console.error("Auth middleware error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Server Unable to Respond",
-      error: "Internal server error",
+    let errorMessage = "Unauthorized";
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    if (error instanceof DrizzleError) {
+      errorMessage = "Database error: " + error.message;
+    }
+    throw new CustomError({
+      statusCode: 401,
+      message: "Please Signup/Signin first",
+      error: errorMessage || "Unauthorized",
     });
+    // return res.status(401).json({
+    //   success: false,
+    //   message: "",
+    //   error: errorMessage || "Unauthorized",
+    // });
   }
 };
 
@@ -279,11 +358,23 @@ export const requireAdminauth = async (
     req.user = user;
     next();
   } catch (error) {
-    console.error("Auth middleware error:", error);
-    return res.status(500).json({
+    let errorMessage = "Unauthorized";
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    if (error instanceof DrizzleError) {
+      errorMessage = "Database error: " + error.message;
+    }
+    throw new CustomError({
+      statusCode: 401,
       success: false,
-      message: "Server Unable to Respond",
-      error: "Internal server error",
+      message: "No Authorized Admin Found",
+      error: errorMessage || "Unauthorized",
     });
+    // res.status(401).json({
+    //   success: false,
+    //   message: "No Authorized Admin Found",
+    //   error: errorMessage || "Unauthorized",
+    // });
   }
 };
