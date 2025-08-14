@@ -343,18 +343,18 @@ export const requireAuth = async (
   }
 };
 
-export interface AdminAuthenticatedRquest extends Request {
+export interface AdminAuthenticatedRequest extends Request {
   user?: Awaited<ReturnType<typeof getAuthenticatedAdmin>>;
 }
 
 export const requireAdminauth = async (
-  req: AdminAuthenticatedRquest,
+  req: AdminAuthenticatedRequest,
   res: Response,
   next: NextFunction
 ): Promise<any> => {
   try {
     const user = await getAuthenticatedAdmin(req);
-    console.log("admin user: ", user);
+    // console.log("admin user: ", user);
     req.user = user;
     next();
   } catch (error) {

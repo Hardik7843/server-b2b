@@ -1,18 +1,19 @@
 import { Response, Router } from "express";
 
 import {
-  AdminAuthenticatedRquest,
+  AdminAuthenticatedRequest,
   requireAdminauth,
 } from "@/controller/auth.controller";
 import productRouter from "./admin/product.route";
 
 const adminRouter = Router();
+// adminRouter.use(requireAdminauth);
 // Mount product routes under /admin/product
-adminRouter.use("/product", productRouter);
 // Other admin routes here
+adminRouter.use("/product", productRouter);
 adminRouter.get(
   "/check",
-  async (req: AdminAuthenticatedRquest, res: Response): Promise<any> => {
+  async (req: AdminAuthenticatedRequest, res: Response): Promise<any> => {
     return res.status(200).json({
       success: true,
       data: { user: req.user },
