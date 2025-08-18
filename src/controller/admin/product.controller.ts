@@ -15,6 +15,8 @@ import {
   sql,
 } from "drizzle-orm";
 import chalk from "chalk";
+import { CustomError } from "@/util/error.util";
+import { createProductSchema } from "@/validators/product.validator";
 
 interface ProductFilters {
   page?: string;
@@ -149,7 +151,7 @@ export const getAllProductAdmin = async (
       success: true,
       message: "Products retrieved successfully",
       data: {
-        admin: req.user,
+        // admin: req.user,
         products: products.map((p) => ({
           ...p,
         })),
@@ -176,11 +178,17 @@ export const getAllProductAdmin = async (
     });
   } catch (error) {
     console.error("Error fetching products:", error);
-    return res.status(500).json({
+    throw new CustomError({
+      statusCode: 500,
       success: false,
       error: "Failed to fetch products",
       message: error instanceof Error ? error.message : "Unknown error",
     });
+    // return res.status(500).json({
+    //   success: false,
+    // error: "Failed to fetch products",
+    // message: error instanceof Error ? error.message : "Unknown error",
+    // });
   }
 };
 
@@ -238,12 +246,26 @@ export const createProductAdmin = async (
     } = req.body;
 
     // Validation
-    if (!name || price === undefined) {
-      return res.status(400).json({
-        success: false,
-        error: "Name and price are required",
+    // if (!name || price === undefined) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     error: "Name and price are required",
+    //   });
+    // }
+
+    const validation = createProductSchema.safeParse(req.body);
+    if (!validation.success) {
+      throw new CustomError({
+        message: "Invalid Inputs for Creating Product",
+        statusCode: 400,
+        error: validation.error.issues.map((issue) => ({
+          field: issue.path[0],
+          message: issue.message,
+        })),
       });
     }
+
+    // console.log(chalk.blue("product Input: "), req.body);
 
     const [newProduct] = await db
       .insert(product)
@@ -259,6 +281,7 @@ export const createProductAdmin = async (
       })
       .returning();
 
+    // console.log("product: ", newProduct);
     return res.status(201).json({
       success: true,
       message: "Product created successfully",
@@ -268,12 +291,15 @@ export const createProductAdmin = async (
       },
     });
   } catch (error) {
-    console.error("Error creating product:", error);
-    return res.status(500).json({
-      success: false,
-      error: "Failed to create product",
-      message: error instanceof Error ? error.message : "Unknown error",
-    });
+    // console.error("Error creating product:", error);
+    if (error instanceof CustomError) throw error;
+    else
+      throw new CustomError({
+        statusCode: 500,
+        success: false,
+        error: "Failed to create product",
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
   }
 };
 
