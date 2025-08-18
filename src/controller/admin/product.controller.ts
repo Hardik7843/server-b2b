@@ -14,7 +14,6 @@ import {
   or,
   sql,
 } from "drizzle-orm";
-import chalk from "chalk";
 import { CustomError } from "@/util/error.util";
 import { createProductSchema } from "@/validators/product.validator";
 
@@ -372,10 +371,9 @@ export const deleteProductAdmin = async (
       .update(product)
       .set({
         deletedAt: new Date(),
-        updatedAt: new Date(),
       })
       .where(and(eq(product.id, Number(id)), isNull(product.deletedAt)))
-      .returning({ id: product.id, name: product.name });
+      .returning();
 
     if (!deletedProduct) {
       return res.status(404).json({
