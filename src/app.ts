@@ -16,7 +16,7 @@ app.use(cookieParser());
 app.use(express.json());
 
 app.get("/", (req: Request, res: Response) => {
-  res.status(200).json({ message: "🚀 Annapurna server is running fine!" });
+  res.status(200).json({ message: "🚀 Meal Nest server is running fine!" });
 });
 
 app.use("/auth", authRouter);
