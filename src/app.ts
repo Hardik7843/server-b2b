@@ -20,6 +20,7 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 app.use("/auth", authRouter);
+
 app.use("/user", requireAuth, userRouter);
 app.use("/admin", requireAdminauth, adminRouter);
 app.listen(port, () => {
