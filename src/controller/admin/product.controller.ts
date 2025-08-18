@@ -51,7 +51,7 @@ export const getAllProductAdmin = async (
       active,
     }: ProductFilters = req.body;
 
-    console.log(chalk.blue("ProductFilters from body: "), req.body);
+    // console.log(chalk.blue("ProductFilters from body: "), req.body);
     const pageNum = Number(page);
     const limitNum = limit;
     const offset = (pageNum - 1) * limitNum;
