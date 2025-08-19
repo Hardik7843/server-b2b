@@ -264,19 +264,35 @@ export const createProductAdmin = async (
       });
     }
 
-    // console.log(chalk.blue("product Input: "), req.body);
+    // const [newProduct] = await db
+    //   .insert(product)
+    //   .values({
+    //     name,
+    //     description,
+    //     price: Number(price),
+    //     originalPrice: originalPrice ? Number(originalPrice) : null,
+    //     images: Array.isArray(images) ? images : [],
+    //     tags: Array.isArray(tags) ? tags : [],
+    //     stock: Number(stock),
+    //     active: Boolean(active),
+    //   })
+    //   .returning();
+
+    const parsedData = validation.data;
 
     const [newProduct] = await db
       .insert(product)
       .values({
-        name,
-        description,
-        price: Number(price),
-        originalPrice: originalPrice ? Number(originalPrice) : null,
-        images: Array.isArray(images) ? images : [],
-        tags: Array.isArray(tags) ? tags : [],
-        stock: Number(stock),
-        active: Boolean(active),
+        name: parsedData.name,
+        description: parsedData.description,
+        price: Number(parsedData.price),
+        originalPrice: parsedData.originalPrice
+          ? Number(parsedData.originalPrice)
+          : null,
+        images: Array.isArray(parsedData.images) ? parsedData.images : [],
+        tags: Array.isArray(parsedData.tags) ? parsedData.tags : [],
+        stock: Number(parsedData.stock ?? 0),
+        active: Boolean(parsedData.active ?? false),
       })
       .returning();
 
@@ -302,7 +318,7 @@ export const createProductAdmin = async (
   }
 };
 
-export const updateProductAdmin = async (
+export const editProductAdmin = async (
   req: AdminAuthenticatedRequest,
   res: Response
 ): Promise<any> => {
@@ -311,33 +327,30 @@ export const updateProductAdmin = async (
     const updateData = req.body;
 
     // Remove undefined values
-    const cleanUpdateData = Object.fromEntries(
-      Object.entries(updateData).filter(([_, value]) => value !== undefined)
-    );
-
-    if (cleanUpdateData.price) {
-      cleanUpdateData.price = Number(cleanUpdateData.price);
+    const validation = createProductSchema.safeParse(updateData);
+    if (!validation.success) {
+      throw new CustomError({
+        message: "Invalid Inputs for Update Product",
+        statusCode: 400,
+        error: validation.error.issues.map((issue) => ({
+          field: issue.path[0],
+          message: issue.message,
+        })),
+      });
     }
-    if (cleanUpdateData.originalPrice) {
-      cleanUpdateData.originalPrice = Number(cleanUpdateData.originalPrice);
-    }
-    if (cleanUpdateData.stock) {
-      cleanUpdateData.stock = Number(cleanUpdateData.stock);
-    }
+    const parsedData = validation.data;
 
     const [updatedProduct] = await db
       .update(product)
-      .set({
-        ...cleanUpdateData,
-        updatedAt: new Date(),
-      })
+      .set({ ...parsedData })
       .where(and(eq(product.id, Number(id)), isNull(product.deletedAt)))
       .returning();
 
     if (!updatedProduct) {
-      return res.status(404).json({
+      throw new CustomError({
         success: false,
-        error: "Product not found",
+        statusCode: 404,
+        message: "Product Not Found",
       });
     }
 
@@ -350,12 +363,14 @@ export const updateProductAdmin = async (
       },
     });
   } catch (error) {
-    console.error("Error updating product:", error);
-    return res.status(500).json({
-      success: false,
-      error: "Failed to update product",
-      message: error instanceof Error ? error.message : "Unknown error",
-    });
+    if (error instanceof CustomError) throw error;
+    else
+      throw new CustomError({
+        statusCode: 500,
+        success: false,
+        error: "Failed to update product",
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
   }
 };
 
@@ -400,44 +415,44 @@ export const deleteProductAdmin = async (
   }
 };
 
-export const editProductAdmin = async (
-  req: AdminAuthenticatedRequest,
-  res: Response
-): Promise<any> => {
-  try {
-    const { id } = req.params;
+// export const editProductAdmin = async (
+//   req: AdminAuthenticatedRequest,
+//   res: Response
+// ): Promise<any> => {
+//   try {
+//     const { id } = req.params;
 
-    // Soft delete by setting deletedAt timestamp
-    const [deletedProduct] = await db
-      .update(product)
-      .set({
-        deletedAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .where(and(eq(product.id, Number(id)), isNull(product.deletedAt)))
-      .returning({ id: product.id, name: product.name });
+//     // Soft delete by setting deletedAt timestamp
+//     const [deletedProduct] = await db
+//       .update(product)
+//       .set({
+//         deletedAt: new Date(),
+//         updatedAt: new Date(),
+//       })
+//       .where(and(eq(product.id, Number(id)), isNull(product.deletedAt)))
+//       .returning({ id: product.id, name: product.name });
 
-    if (!deletedProduct) {
-      return res.status(404).json({
-        success: false,
-        error: "Product not found",
-      });
-    }
+//     if (!deletedProduct) {
+//       return res.status(404).json({
+//         success: false,
+//         error: "Product not found",
+//       });
+//     }
 
-    return res.status(200).json({
-      success: true,
-      message: `Product ${id} deleted successfully`,
-      data: {
-        admin: req.user,
-        deletedProduct,
-      },
-    });
-  } catch (error) {
-    console.error("Error deleting product:", error);
-    return res.status(500).json({
-      success: false,
-      error: "Failed to delete product",
-      message: error instanceof Error ? error.message : "Unknown error",
-    });
-  }
-};
+//     return res.status(200).json({
+//       success: true,
+//       message: `Product ${id} deleted successfully`,
+//       data: {
+//         admin: req.user,
+//         deletedProduct,
+//       },
+//     });
+//   } catch (error) {
+//     console.error("Error deleting product:", error);
+//     return res.status(500).json({
+//       success: false,
+//       error: "Failed to delete product",
+//       message: error instanceof Error ? error.message : "Unknown error",
+//     });
+//   }
+// };
