@@ -12,8 +12,8 @@ import { errorMiddleware } from "./util/error.util";
 const app = express();
 const port = process.env.PORT || 8080;
 
-app.use(cookieParser());
 app.use(express.json());
+app.use(cookieParser());
 
 app.get("/", (req: Request, res: Response) => {
   res.status(200).json({ message: "🚀 Meal Nest server is running fine!" });
