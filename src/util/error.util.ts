@@ -31,7 +31,6 @@ export class CustomError extends Error {
     this.error = error;
   }
 }
-
 export const errorMiddleware = (
   error: unknown,
   req: Request,
