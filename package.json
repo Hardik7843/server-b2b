@@ -14,11 +14,13 @@
   "description": "",
   "dependencies": {
     "@pnpm/exe": "^10.10.0",
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.1",
     "@types/node": "^22.15.17",
     "bcrypt": "^6.0.0",
     "chalk": "^5.5.0",
     "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "drizzle-orm": "^0.43.1",
     "drizzle-seed": "^0.3.1",

@@ -8,12 +8,18 @@ import cookieParser from "cookie-parser";
 import { requireAdminauth, requireAuth } from "./controller/auth.controller";
 import adminRouter from "./routers/admin.route";
 import { errorMiddleware } from "./util/error.util";
-
+import cors from "cors";
 const app = express();
 const port = process.env.PORT || 8080;
 
 app.use(express.json());
 app.use(cookieParser());
+app.use(
+  cors({
+    origin: ["http://localhost:3000"],
+    credentials: true,
+  })
+);
 
 app.get("/", (req: Request, res: Response) => {
   res.status(200).json({ message: "🚀 Meal Nest server is running fine!" });

@@ -8,9 +8,8 @@ import {
   signupSchema,
 } from "@/validators/auth.validator";
 import bcrypt from "bcrypt";
-import { DrizzleError, eq, ne } from "drizzle-orm";
+import { DrizzleError, eq } from "drizzle-orm";
 import { NextFunction, Request, Response } from "express";
-import { cursorTo } from "readline";
 
 // Signup Controller
 
