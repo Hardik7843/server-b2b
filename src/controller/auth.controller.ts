@@ -90,9 +90,9 @@ export const signup = async (req: Request, res: Response): Promise<any> => {
     });
 
     res.cookie("sessionToken", sessionToken, {
-      httpOnly: false,
-      secure: false, // HTTPS only (production)
-      sameSite: "strict", // CSRF protection
+      httpOnly: true,
+      secure: false, // true only with HTTPS
+      sameSite: "lax", // CSRF protection
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
     });
 
@@ -198,20 +198,21 @@ export const signin = async (req: Request, res: Response): Promise<any> => {
     });
 
     res.cookie("sessionToken", sessionToken, {
-      httpOnly: false,
-      secure: false, // HTTPS only (production)
-      sameSite: "strict", // CSRF protection
+      httpOnly: true,
+      secure: false, // true only with HTTPS
+      sameSite: "lax", // CSRF protection
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
     });
 
     const { password: _password, ...finalUser } = user[0];
 
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
       message: "Login successful",
       sessionToken,
       data: { user: finalUser },
     });
+    return;
   } catch (error) {
     // console.error("Signin error:", error);
     throw error;

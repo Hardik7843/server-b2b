@@ -1,9 +1,6 @@
 import { Response, Router } from "express";
 
-import {
-  AdminAuthenticatedRequest,
-  requireAdminauth,
-} from "@/controller/auth.controller";
+import { AdminAuthenticatedRequest } from "@/controller/auth.controller";
 import productRouter from "./admin/product.route";
 
 const adminRouter = Router();
