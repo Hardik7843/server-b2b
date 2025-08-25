@@ -44,7 +44,7 @@ export const errorMiddleware = (
     statusCode: 501,
   };
   if (error instanceof Error) {
-    response.message = error.message;
+    response.error = error.message;
     response.stack = error.stack;
   }
   if (error instanceof CustomError) {
