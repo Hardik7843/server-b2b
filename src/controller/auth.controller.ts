@@ -10,6 +10,7 @@ import {
 import bcrypt from "bcrypt";
 import { DrizzleError, eq } from "drizzle-orm";
 import { NextFunction, Request, Response } from "express";
+import crypto from "crypto";
 
 // Signup Controller
 
