@@ -3,12 +3,13 @@ import {
   deleteProductAdmin,
   editProductAdmin,
   getAllProductAdmin,
+  getProductByIdAdmin,
 } from "@/controller/admin/product.controller";
 import { Router } from "express";
 
-
 const productRouter = Router();
 productRouter.get("/all", getAllProductAdmin);
+productRouter.get("/get/:id", getProductByIdAdmin);
 productRouter.post("/new", createProductAdmin);
 productRouter.put("/edit/:id", editProductAdmin);
 productRouter.delete("/delete/:id", deleteProductAdmin);

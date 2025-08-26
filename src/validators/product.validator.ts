@@ -34,7 +34,7 @@ export const createProductSchema = z.object({
 
   tags: z.array(z.string()).default([]).optional(),
 
-  active: z.boolean().default(false),
+  // active: z.boolean().default(false),
 
   stock: z
     .number()

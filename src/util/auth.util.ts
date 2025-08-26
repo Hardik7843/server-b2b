@@ -34,8 +34,6 @@ export async function getAuthenticatedAdmin(req: Request) {
     req.cookies.sessionToken ||
     req.headers.authorization?.replace("Bearer ", "");
 
-  console.log("Token: ", token);
-
   if (!token) throw new Error("Unauthorized: No token provided");
 
   // 1️⃣ Check session validity

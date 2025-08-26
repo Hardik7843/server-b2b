@@ -204,10 +204,15 @@ export const getProductByIdAdmin = async (
       .where(and(eq(product.id, Number(id)), isNull(product.deletedAt)));
 
     if (!productData) {
-      return res.status(404).json({
+      throw new CustomError({
         success: false,
-        error: "Product not found",
+        statusCode: 404,
+        message: "Product Not Found",
       });
+      // return res.status(404).json({
+      //   success: false,
+      //   error: "Product not found",
+      // });
     }
 
     return res.status(200).json({
@@ -233,16 +238,16 @@ export const createProductAdmin = async (
   res: Response
 ): Promise<any> => {
   try {
-    const {
-      name,
-      description,
-      price,
-      originalPrice,
-      images = [],
-      tags = [],
-      stock = 0,
-      active = false,
-    } = req.body;
+    // const {
+    //   name,
+    //   description,
+    //   price,
+    //   originalPrice,
+    //   images = [],
+    //   tags = [],
+    //   stock = 0,
+    //   active = false,
+    // } = req.body;
 
     // Validation
     // if (!name || price === undefined) {
@@ -292,7 +297,7 @@ export const createProductAdmin = async (
         images: Array.isArray(parsedData.images) ? parsedData.images : [],
         tags: Array.isArray(parsedData.tags) ? parsedData.tags : [],
         stock: Number(parsedData.stock ?? 0),
-        active: Boolean(parsedData.active ?? false),
+        // active: Boolean(parsedData.active ?? false),
       })
       .returning();
 
