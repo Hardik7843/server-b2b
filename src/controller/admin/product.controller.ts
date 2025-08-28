@@ -18,7 +18,7 @@ import { CustomError } from "@/util/error.util";
 import { createProductSchema } from "@/validators/product.validator";
 
 interface ProductFilters {
-  page?: string;
+  page?: number;
   limit?: number;
   name?: string;
   tags?: string;
@@ -38,7 +38,7 @@ export const getAllProductAdmin = async (
 ): Promise<any> => {
   try {
     const {
-      page = "1",
+      page = 1,
       limit = 10,
       name = "",
       tags = "",
@@ -50,12 +50,11 @@ export const getAllProductAdmin = async (
       dateFrom,
       dateTo,
       active,
-    }: ProductFilters = req.body;
+    }: ProductFilters = req.body || {};
 
     // console.log(chalk.blue("ProductFilters from body: "), req.body);
-    const pageNum = Number(page);
-    const limitNum = limit;
-    const offset = (pageNum - 1) * limitNum;
+
+    const offset = (page - 1) * limit;
 
     // Build dynamic where conditions
     const conditions = [];
@@ -115,7 +114,7 @@ export const getAllProductAdmin = async (
         orderBy[0] = asc(product.createdAt);
         break;
       default:
-        orderBy[0] = desc(product.createdAt); // Default: newest first
+        orderBy[0] = desc(product.updatedAt); // Default: newest first
     }
 
     switch (priceSort) {
@@ -135,7 +134,7 @@ export const getAllProductAdmin = async (
       .from(product)
       .where(and(...conditions))
       .orderBy(...orderBy)
-      .limit(limitNum)
+      .limit(limit)
       .offset(offset);
 
     // Get total count for pagination
@@ -144,7 +143,7 @@ export const getAllProductAdmin = async (
       .from(product)
       .where(and(...conditions));
 
-    const totalPages = Math.ceil(count / limitNum);
+    const totalPages = Math.ceil(count / limit);
 
     return res.status(200).json({
       success: true,
@@ -155,12 +154,12 @@ export const getAllProductAdmin = async (
           ...p,
         })),
         pagination: {
-          page: pageNum,
-          limit: limitNum,
+          page: page,
+          limit: limit,
           total: count,
           pages: totalPages,
-          hasNext: pageNum < totalPages,
-          hasPrev: pageNum > 1,
+          hasNext: page < totalPages,
+          hasPrev: page > 1,
         },
         // filters: {
         //   name,
