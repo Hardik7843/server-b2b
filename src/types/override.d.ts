@@ -3,6 +3,7 @@ declare namespace NodeJS {
   interface ProcessEnv {
     DATABASE_URL: string;
     PORT: string;
+    BLOB_READ_WRITE_TOKEN: string;
     // Add more required env vars here
   }
 }

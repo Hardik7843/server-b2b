@@ -5,7 +5,7 @@ import db from ".";
 
 async function main() {
   //   const db = drizzle(process.env.DATABASE_URL);
-  await seed(db, { product });
+  await seed(db, { product }, { count: 20 });
   console.log("Database seeded successfully");
 }
 

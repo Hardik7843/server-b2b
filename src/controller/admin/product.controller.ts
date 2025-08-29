@@ -39,7 +39,7 @@ export const getAllProductAdmin = async (
   try {
     const {
       page = 1,
-      limit = 10,
+      limit = 20,
       name = "",
       tags = "",
       description = "",
