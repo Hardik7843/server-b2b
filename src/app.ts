@@ -1,13 +1,15 @@
 // import dotenv from "dotenv";
 // dotenv.config({ path: ".env.local" });
 // console.log("loaded environment");
-import express, { Request, RequestHandler, Response } from "express";
+import express, { Request, Response } from "express";
 import userRouter from "./routers/user.route";
 import authRouter from "./routers/auth.route";
 import cookieParser from "cookie-parser";
 import { requireAdminauth, requireAuth } from "./controller/auth.controller";
 import adminRouter from "./routers/admin.route";
 import { errorMiddleware } from "./util/error.util";
+import { VercelRequest, VercelResponse } from "@vercel/node";
+
 import cors from "cors";
 const app = express();
 
@@ -35,3 +37,7 @@ app.listen(port, () => {
 });
 
 app.use(errorMiddleware);
+
+export default (req: VercelRequest, res: VercelResponse) => {
+  return app(req, res);
+};

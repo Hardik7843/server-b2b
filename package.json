@@ -17,6 +17,7 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.1",
     "@types/node": "^22.15.17",
+    "@vercel/node": "^5.3.17",
     "bcrypt": "^6.0.0",
     "chalk": "^5.5.0",
     "cookie-parser": "^1.4.7",
