@@ -103,7 +103,7 @@ const signup = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         res.cookie("sessionToken", sessionToken, {
             httpOnly: true,
             secure: false, // true only with HTTPS
-            sameSite: "lax", // CSRF protection
+            // sameSite: "lax", // CSRF protection
             maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
         });
         // delete newUser,
@@ -202,7 +202,7 @@ const signin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         res.cookie("sessionToken", sessionToken, {
             httpOnly: true,
             secure: false, // true only with HTTPS
-            sameSite: "lax", // CSRF protection
+            // sameSite: "lax", // CSRF protection
             maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
         });
         const _a = user[0], { password: _password } = _a, finalUser = __rest(_a, ["password"]);
