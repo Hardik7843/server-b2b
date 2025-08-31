@@ -8,7 +8,7 @@ import cookieParser from "cookie-parser";
 import { requireAdminauth, requireAuth } from "./controller/auth.controller";
 import adminRouter from "./routers/admin.route";
 import { errorMiddleware } from "./util/error.util";
-import { VercelRequest, VercelResponse } from "@vercel/node";
+// import { VercelRequest, VercelResponse } from "@vercel/node";
 
 import cors from "cors";
 const app = express();
@@ -32,12 +32,12 @@ app.use("/auth", authRouter);
 
 app.use("/user", requireAuth, userRouter);
 app.use("/admin", requireAdminauth, adminRouter);
-// app.listen(port, () => {
-//   console.log(`Example app listening on port ${port}`);
-// });
+app.listen(port, () => {
+  console.log(`Example app listening on port ${port}`);
+});
 
 app.use(errorMiddleware);
 
-export default (req: VercelRequest, res: VercelResponse) => {
-  return app(req, res);
-};
+// export default (req: VercelRequest, res: VercelResponse) => {
+//   return app(req, res);
+// };
