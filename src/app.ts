@@ -32,9 +32,9 @@ app.use("/auth", authRouter);
 
 app.use("/user", requireAuth, userRouter);
 app.use("/admin", requireAdminauth, adminRouter);
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
-});
+// app.listen(port, () => {
+//   console.log(`Example app listening on port ${port}`);
+// });
 
 app.use(errorMiddleware);
 
