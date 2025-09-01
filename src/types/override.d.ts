@@ -5,6 +5,7 @@ declare namespace NodeJS {
     PORT: string;
     BLOB_READ_WRITE_TOKEN: string;
     CLIENT_URL: string;
+    ENVIRONMENT: string;
     // Add more required env vars here
   }
 }
