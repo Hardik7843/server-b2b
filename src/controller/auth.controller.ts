@@ -91,7 +91,7 @@ export const signup = async (req: Request, res: Response): Promise<any> => {
     });
 
     res.cookie("sessionToken", sessionToken, {
-      httpOnly: true,
+      httpOnly: false,
       secure: true, // true only with HTTPS
       sameSite: "none", // CSRF protection
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
@@ -199,7 +199,7 @@ export const signin = async (req: Request, res: Response): Promise<any> => {
     });
 
     res.cookie("sessionToken", sessionToken, {
-      httpOnly: true,
+      httpOnly: false,
       secure: true, // true only with HTTPS
       sameSite: "none", // CSRF protection
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
