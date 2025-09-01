@@ -17,7 +17,7 @@ const port = process.env.PORT || 3000;
 
 app.use(
   cors({
-    origin: ["http://localhost:3000", "https://app-b2b-three.vercel.app"],
+    origin: process.env.CLIENT_URL,
     credentials: true,
   })
 );
