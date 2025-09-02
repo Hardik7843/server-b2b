@@ -1,14 +1,22 @@
-import { AuthenticatedRequest } from "@/controller/auth.controller";
-import { makeUser } from "@/controller/user.controller";
-import { Request, Response, Router } from "express";
-// import { makeUser } from "../controller/user.controller";
+import {
+  AuthenticatedRequest,
+  requireAuth,
+} from "@/controller/auth.controller";
+import {
+  addProduct,
+  decreaseItem,
+  getAllProducts,
+  increasItem,
+  removeProduct,
+} from "@/controller/user.controller";
+
+import { Response, Router } from "express";
 
 export const userRouter = Router();
 
-// userRouter.post('/createOne', UserCreator)
-// userRouter.delete('/truncate', UserTruncate)
-// userRouter.post('/update', updateUser)
+userRouter.get("/product/all", getAllProducts);
 
+userRouter.use(requireAuth);
 userRouter.get(
   "/check",
   async (req: AuthenticatedRequest, res: Response): Promise<any> => {
@@ -22,6 +30,11 @@ userRouter.get(
   }
 );
 
+userRouter.post("/product/add", addProduct);
+userRouter.delete("/product/remove", removeProduct);
+userRouter.post("/product/increment", increasItem);
+userRouter.put("/product/decrement", decreaseItem);
+
 // userRouter.post("/signup", signup);
 // userRouter.post("/login", login);
 // userRouter.post("/logout", logout);
@@ -30,6 +43,5 @@ userRouter.get(
 
 // userRouter.put("/updateProfile", updateProfile);
 // userRouter.get("/check", checkAuth);
-// userRouter.post("/createOne", makeUser);
 
 export default userRouter;

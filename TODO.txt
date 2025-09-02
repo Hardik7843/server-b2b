@@ -1,0 +1,10 @@
+User APIs breakdown
+1. user get products with all filters
+2. user adds product in cart
+3. user remove any product from cart
+4. user increase count of product -
+                                   |--> This two can be grouped as change count of product.
+5. user decrease count of product -
+
+6. Clicks on checkout after wards payment cycle.
+

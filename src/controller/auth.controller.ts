@@ -154,7 +154,7 @@ export const signin = async (req: Request, res: Response): Promise<any> => {
     if (user.length === 0 || !user[0].password) {
       throw new CustomError({
         statusCode: 401,
-        message: "Wrong Email",
+        message: "Wrong Email or Password",
         error: "Invalid credentials",
       });
       // return res.status(401).json({
@@ -170,7 +170,7 @@ export const signin = async (req: Request, res: Response): Promise<any> => {
     if (!isValidPassword) {
       throw new CustomError({
         statusCode: 401,
-        message: "Wrong Password",
+        message: "Wrong Email or Password",
         error: "Invalid credentials",
       });
       // return res.status(401).json({

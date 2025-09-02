@@ -5,7 +5,7 @@ import express, { Request, Response } from "express";
 import userRouter from "./routers/user.route";
 import authRouter from "./routers/auth.route";
 import cookieParser from "cookie-parser";
-import { requireAdminauth, requireAuth } from "./controller/auth.controller";
+import { requireAdminauth } from "./controller/auth.controller";
 import adminRouter from "./routers/admin.route";
 import { errorMiddleware } from "./util/error.util";
 // import { VercelRequest, VercelResponse } from "@vercel/node";
@@ -24,13 +24,18 @@ app.use(
 app.use(cookieParser());
 app.use(express.json());
 
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
+  next();
+});
+
 app.get("/", (req: Request, res: Response) => {
   res.status(200).json({ message: "🚀 Meal Nest server is running fine!" });
 });
 
 app.use("/auth", authRouter);
 
-app.use("/user", requireAuth, userRouter);
+app.use("/user", userRouter);
 app.use("/admin", requireAdminauth, adminRouter);
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);

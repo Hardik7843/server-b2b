@@ -6,6 +6,7 @@ import {
   and,
   asc,
   desc,
+  DrizzleError,
   eq,
   gte,
   ilike,
@@ -16,21 +17,8 @@ import {
 } from "drizzle-orm";
 import { CustomError } from "@/util/error.util";
 import { createProductSchema } from "@/validators/product.validator";
-
-interface ProductFilters {
-  page?: number;
-  limit?: number;
-  name?: string;
-  tags?: string;
-  description?: string;
-  priceSort?: "DESC" | "ASC";
-  dateSort?: "DESC" | "ASC";
-  minPrice?: number;
-  maxPrice?: number;
-  dateFrom?: string;
-  dateTo?: string;
-  active?: string;
-}
+import { ProductFilters } from "@/types/product";
+import { DatabaseError } from "pg";
 
 export const getAllProductAdmin = async (
   req: AdminAuthenticatedRequest,
@@ -268,6 +256,8 @@ export const createProductAdmin = async (
       });
     }
 
+    console.log("req.body: ", req.body);
+
     // const [newProduct] = await db
     //   .insert(product)
     //   .values({
@@ -287,6 +277,7 @@ export const createProductAdmin = async (
     const [newProduct] = await db
       .insert(product)
       .values({
+        id: 1,
         name: parsedData.name,
         description: parsedData.description,
         price: Number(parsedData.price),
@@ -310,8 +301,9 @@ export const createProductAdmin = async (
       },
     });
   } catch (error) {
-    // console.error("Error creating product:", error);
+    // console.error("Error creating product:", error.constructor.name);
     if (error instanceof CustomError) throw error;
+    if (error instanceof DatabaseError) throw error;
     else
       throw new CustomError({
         statusCode: 500,
@@ -319,6 +311,24 @@ export const createProductAdmin = async (
         error: "Failed to create product",
         message: error instanceof Error ? error.message : "Unknown error",
       });
+
+    // if (error instanceof CustomError) {
+    //   throw error;
+    // } else if (error instanceof DatabaseError) {
+    //   throw new CustomError({
+    //     statusCode: 400,
+    //     success: false,
+    //     error: "Database Error",
+    //     message: "Something went wrong while saving your product.", // ✅ user-friendly
+    //   });
+    // } else {
+    //   throw new CustomError({
+    //     statusCode: 500,
+    //     success: false,
+    //     error: "Server Error",
+    //     message: "Failed to create product. Please try again later.", // ✅ short & crisp
+    //   });
+    // }
   }
 };
 

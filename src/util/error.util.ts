@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from "express";
+import { DatabaseError } from "pg";
 import { success } from "zod";
 
 type ParsedResponse = {
@@ -47,11 +48,15 @@ export const errorMiddleware = (
     response.error = error.message;
     response.stack = error.stack;
   }
+  if (error instanceof DatabaseError) {
+    response.message = "Something went wrong";
+    response.error = error.message;
+    response.statusCode = 500;
+  }
   if (error instanceof CustomError) {
     response.message = error.message;
     response.statusCode = error.statusCode;
     response.error = error.error;
-
     // reassign the error for further processing
     // console.log("error.error", error.error);
     // if (error.error) error = error.error;

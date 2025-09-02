@@ -174,6 +174,9 @@ export const order = pgTable("order", {
 
 export const orderItems = pgTable("orderItems", {
   id: serial("id").primaryKey(),
+  userId: text("userId")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   productId: integer("productId")
     .notNull()
     .references(() => product.id, { onDelete: "cascade" }),
