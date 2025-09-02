@@ -171,7 +171,8 @@ export const addProduct = async (
 ): Promise<any> => {
   try {
     const user = req.user;
-    const { productId } = req.body;
+    console.log("req.body: ", req.body);
+    const { productId } = req.body || {};
     if (!user?.id) {
       throw new CustomError({
         success: false,
@@ -192,7 +193,13 @@ export const addProduct = async (
     const productDetails = await db
       .select()
       .from(product)
-      .where(and(eq(product.id, productId), isNull(product.deletedAt)));
+      .where(
+        and(
+          eq(product.id, productId),
+          isNull(product.deletedAt),
+          eq(product.active, true)
+        )
+      );
 
     if (productDetails.length === 0) {
       throw new CustomError({
@@ -200,6 +207,23 @@ export const addProduct = async (
         statusCode: 404,
         message: "Product not found",
         error: "Not Found",
+      });
+    }
+
+    // Check if the product is already in the user's cart
+    const [existingCartItem] = await db
+      .select()
+      .from(orderItems)
+      .where(
+        and(eq(orderItems.userId, user.id), eq(orderItems.productId, productId))
+      )
+      .limit(1);
+
+    if (existingCartItem) {
+      return res.status(200).json({
+        success: true,
+        message: "Product is already in the cart",
+        data: { user: user, cartItem: existingCartItem },
       });
     }
 
@@ -211,12 +235,13 @@ export const addProduct = async (
       })
       .returning();
 
-    return res.status(200).json({
+    return res.status(201).json({
       success: true,
       message: "Product added to cart successfully",
       data: { user: user, cartItem: cartItem[0] },
     });
   } catch (error) {
+    console.error("Error adding product to cart:", error);
     throw error;
   }
 };
