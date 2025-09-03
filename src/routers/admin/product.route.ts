@@ -8,7 +8,7 @@ import {
 import { Router } from "express";
 
 const productRouter = Router();
-productRouter.get("/all", getAllProductAdmin);
+productRouter.post("/all", getAllProductAdmin);
 productRouter.get("/get/:id", getProductByIdAdmin);
 productRouter.post("/new", createProductAdmin);
 productRouter.put("/edit/:id", editProductAdmin);

@@ -40,7 +40,7 @@ export const getAllProductAdmin = async (
       active,
     }: ProductFilters = req.body || {};
 
-    // console.log(chalk.blue("ProductFilters from body: "), req.body);
+    console.log("ProductFilters from body: ", req.body);
 
     const offset = (page - 1) * limit;
 

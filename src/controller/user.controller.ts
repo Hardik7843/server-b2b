@@ -12,6 +12,7 @@ import {
   isNull,
   lte,
   or,
+  SQL,
   sql,
 } from "drizzle-orm";
 import { Request, Response } from "express";
@@ -171,8 +172,9 @@ export const addProduct = async (
 ): Promise<any> => {
   try {
     const user = req.user;
-    console.log("req.body: ", req.body);
+    // console.log("req.body: ", req.body);
     const { productId } = req.body || {};
+
     if (!user?.id) {
       throw new CustomError({
         success: false,
@@ -181,6 +183,7 @@ export const addProduct = async (
         error: "Unauthorized",
       });
     }
+
     if (!productId) {
       throw new CustomError({
         success: false,
@@ -220,6 +223,7 @@ export const addProduct = async (
       .limit(1);
 
     if (existingCartItem) {
+      // Return without fetching updated cart list
       return res.status(200).json({
         success: true,
         message: "Product is already in the cart",
@@ -227,6 +231,7 @@ export const addProduct = async (
       });
     }
 
+    // Add new item to cart
     const cartItem = await db
       .insert(orderItems)
       .values({
@@ -235,28 +240,351 @@ export const addProduct = async (
       })
       .returning();
 
+    // Fetch updated cart list with product details
+    const updatedCartItems = await db
+      .select({
+        id: orderItems.id,
+        productId: orderItems.productId,
+        userId: orderItems.userId,
+        quantity: orderItems.quantity, // if you have quantity field
+        createdAt: orderItems.createdAt,
+        // Product details
+        productName: product.name,
+        productPrice: product.price,
+        productOriginalPrice: product.originalPrice,
+        productImages: product.images,
+        productDescription: product.description,
+        // Add other product fields you need
+      })
+      .from(orderItems)
+      .innerJoin(product, eq(orderItems.productId, product.id))
+      .where(
+        and(
+          eq(orderItems.userId, user.id),
+          isNull(product.deletedAt),
+          eq(product.active, true)
+        )
+      );
+
     return res.status(201).json({
       success: true,
       message: "Product added to cart successfully",
-      data: { user: user, cartItem: cartItem[0] },
+      data: {
+        user: user,
+        cartItems: updatedCartItems,
+        addedItem: cartItem[0],
+      },
     });
   } catch (error) {
-    console.error("Error adding product to cart:", error);
+    // console.error("Error adding product to cart:", error);
     throw error;
   }
 };
 
 export const removeProduct = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response
-): Promise<any> => {};
+): Promise<any> => {
+  try {
+    const user = req.user;
+    // console.log("req.body: ", req.body);
+    const { productId } = req.body || {};
+
+    if (!user?.id) {
+      throw new CustomError({
+        success: false,
+        statusCode: 401,
+        message: "Please login to remove product from cart",
+        error: "Unauthorized",
+      });
+    }
+
+    if (!productId) {
+      throw new CustomError({
+        success: false,
+        statusCode: 400,
+        message: "Product ID is required",
+        error: "Bad Request",
+      });
+    }
+
+    // Check if the product exists in the user's cart
+    const [existingCartItem] = await db
+      .select()
+      .from(orderItems)
+      .where(
+        and(eq(orderItems.userId, user.id), eq(orderItems.productId, productId))
+      )
+      .limit(1);
+
+    if (!existingCartItem) {
+      throw new CustomError({
+        success: false,
+        statusCode: 404,
+        message: "Product not found in cart",
+        error: "Not Found",
+      });
+    }
+
+    // Remove the product from cart
+    const removedItem = await db
+      .delete(orderItems)
+      .where(
+        and(eq(orderItems.userId, user.id), eq(orderItems.productId, productId))
+      )
+      .returning();
+
+    // Fetch updated cart list with product details (after removal)
+    const updatedCartItems = await db
+      .select({
+        id: orderItems.id,
+        productId: orderItems.productId,
+        userId: orderItems.userId,
+        quantity: orderItems.quantity, // if you have quantity field
+        createdAt: orderItems.createdAt,
+        // Product details
+        productName: product.name,
+        productPrice: product.price,
+        productOriginalPrice: product.originalPrice,
+        productImages: product.images,
+        productDescription: product.description,
+        // Add other product fields you need
+      })
+      .from(orderItems)
+      .innerJoin(product, eq(orderItems.productId, product.id))
+      .where(
+        and(
+          eq(orderItems.userId, user.id),
+          isNull(product.deletedAt),
+          eq(product.active, true)
+        )
+      );
+
+    return res.status(200).json({
+      success: true,
+      message: "Product removed from cart successfully",
+      data: {
+        user: user,
+        cartItems: updatedCartItems,
+        removedItem: removedItem[0],
+      },
+    });
+  } catch (error) {
+    // console.error("Error removing product from cart:", error);
+    throw error;
+  }
+};
 
 export const increasItem = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response
-): Promise<any> => {};
+): Promise<any> => {
+  try {
+    const user = req.user;
+    // console.log("req.body: ", req.body);
+    const { productId } = req.body || {};
+
+    if (!user?.id) {
+      throw new CustomError({
+        success: false,
+        statusCode: 401,
+        message: "Please login to increase item quantity",
+        error: "Unauthorized",
+      });
+    }
+
+    if (!productId) {
+      throw new CustomError({
+        success: false,
+        statusCode: 400,
+        message: "Product ID is required",
+        error: "Bad Request",
+      });
+    }
+
+    // Check if the product exists in the user's cart
+    const [existingCartItem] = await db
+      .select({
+        id: orderItems.id,
+        stock: sql`COALESCE(${product.stock}, 0)` as SQL<number>,
+        quantity: sql`COALESCE(${orderItems.quantity}, 1)` as SQL<number>,
+      })
+      .from(orderItems)
+      .where(
+        and(eq(orderItems.userId, user.id), eq(orderItems.productId, productId))
+      )
+      .innerJoin(product, eq(orderItems.productId, product.id))
+      .limit(1);
+
+    if (!existingCartItem) {
+      throw new CustomError({
+        success: false,
+        statusCode: 404,
+        message: "Product not found in cart",
+        error: "Not Found",
+      });
+    }
+
+    if (existingCartItem.quantity >= existingCartItem.stock) {
+      throw new CustomError({
+        success: false,
+        statusCode: 400,
+        message: "Stock limit reached.",
+        error: "Bad Request",
+      });
+    }
+
+    // Increase the quantity
+    await db
+      .update(orderItems)
+      .set({
+        quantity: sql`${orderItems.quantity} + 1`,
+      })
+      .where(
+        and(eq(orderItems.userId, user.id), eq(orderItems.productId, productId))
+      );
+
+    // Fetch updated cart list with product details
+    const updatedCartItems = await db
+      .select({
+        id: orderItems.id,
+        productId: orderItems.productId,
+        userId: orderItems.userId,
+        quantity: orderItems.quantity,
+        createdAt: orderItems.createdAt,
+        // Product details
+        productName: product.name,
+        productPrice: product.price,
+        productOriginalPrice: product.originalPrice,
+        productImages: product.images,
+        productDescription: product.description,
+      })
+      .from(orderItems)
+      .innerJoin(product, eq(orderItems.productId, product.id))
+      .where(
+        and(
+          eq(orderItems.userId, user.id),
+          isNull(product.deletedAt),
+          eq(product.active, true)
+        )
+      );
+
+    return res.status(200).json({
+      success: true,
+      message: "Item quantity increased successfully",
+      data: {
+        user: user,
+        cartItems: updatedCartItems,
+      },
+    });
+  } catch (error) {
+    // console.error("Error increasing item quantity:", error);
+    throw error;
+  }
+};
 
 export const decreaseItem = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response
-): Promise<any> => {};
+): Promise<any> => {
+  try {
+    const user = req.user;
+    // console.log("req.body: ", req.body);
+    const { productId } = req.body || {};
+
+    if (!user?.id) {
+      throw new CustomError({
+        success: false,
+        statusCode: 401,
+        message: "Please login to decrease item quantity",
+        error: "Unauthorized",
+      });
+    }
+
+    if (!productId) {
+      throw new CustomError({
+        success: false,
+        statusCode: 400,
+        message: "Product ID is required",
+        error: "Bad Request",
+      });
+    }
+
+    // Check if the product exists in the user's cart
+    const [existingCartItem] = await db
+      .select({
+        id: orderItems.id,
+        quantity: sql`COALESCE(${orderItems.quantity}, 1)` as SQL<number>,
+      })
+      .from(orderItems)
+      .where(
+        and(eq(orderItems.userId, user.id), eq(orderItems.productId, productId))
+      )
+      .limit(1);
+
+    if (!existingCartItem) {
+      throw new CustomError({
+        success: false,
+        statusCode: 404,
+        message: "Product not found in cart",
+        error: "Not Found",
+      });
+    }
+
+    if (existingCartItem.quantity <= 1) {
+      throw new CustomError({
+        success: false,
+        statusCode: 400,
+        message: "Cannot decrease below 1. Remove item instead.",
+        error: "Bad Request",
+      });
+    }
+
+    // Decrease the quantity
+    await db
+      .update(orderItems)
+      .set({
+        quantity: sql`${orderItems.quantity} - 1`,
+      })
+      .where(
+        and(eq(orderItems.userId, user.id), eq(orderItems.productId, productId))
+      );
+
+    // Fetch updated cart list with product details
+    const updatedCartItems = await db
+      .select({
+        id: orderItems.id,
+        productId: orderItems.productId,
+        userId: orderItems.userId,
+        quantity: orderItems.quantity,
+        createdAt: orderItems.createdAt,
+        // Product details
+        productName: product.name,
+        productPrice: product.price,
+        productOriginalPrice: product.originalPrice,
+        productImages: product.images,
+        productDescription: product.description,
+      })
+      .from(orderItems)
+      .innerJoin(product, eq(orderItems.productId, product.id))
+      .where(
+        and(
+          eq(orderItems.userId, user.id),
+          isNull(product.deletedAt),
+          eq(product.active, true)
+        )
+      );
+
+    return res.status(200).json({
+      success: true,
+      message: "Item quantity decreased successfully",
+      data: {
+        user: user,
+        cartItems: updatedCartItems,
+      },
+    });
+  } catch (error) {
+    // console.error("Error decreasing item quantity:", error);
+    throw error;
+  }
+};

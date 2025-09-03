@@ -33,7 +33,7 @@ userRouter.get(
 userRouter.post("/product/add", addProduct);
 userRouter.delete("/product/remove", removeProduct);
 userRouter.post("/product/increment", increasItem);
-userRouter.put("/product/decrement", decreaseItem);
+userRouter.post("/product/decrement", decreaseItem);
 
 // userRouter.post("/signup", signup);
 // userRouter.post("/login", login);
